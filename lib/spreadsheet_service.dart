@@ -144,4 +144,36 @@ class SpreadsheetService {
       return false;
     }
   }
+
+  Future<List<AppUser>> getUsers() async {
+    if (scriptUrl == null) return [];
+    try {
+      final response = await http.get(Uri.parse('$scriptUrl?action=getUsers'));
+      if (response.statusCode == 200) {
+        List data = jsonDecode(response.body);
+        return data.map((u) => AppUser.fromMap(u)).toList();
+      }
+    } catch (e) {
+      print('Error fetching users: $e');
+    }
+    return [];
+  }
+
+  Future<bool> addUser(AppUser u) async {
+    if (scriptUrl == null) return false;
+    try {
+      final body = {
+        'action': 'addUser',
+        'id': u.id?.toString() ?? '',
+        'username': u.username,
+        'password': u.password,
+        'name': u.name,
+        'role': u.role
+      };
+      final response = await http.post(Uri.parse(scriptUrl!), body: body);
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
 }

@@ -67,6 +67,40 @@ class DatabaseHelper {
     await deleteMobileTable(await database, id);
   }
 
+  Future<List<AppUser>> getUsers() async {
+    if (kIsWeb) return [];
+    return await getMobileUsers(await database);
+  }
+
+  Future<void> insertUser(AppUser user) async {
+    if (kIsWeb) return;
+    await insertMobileUser(await database, user);
+  }
+
+  Future<void> updateUser(AppUser user) async {
+    if (kIsWeb) return;
+    await updateMobileUser(await database, user);
+  }
+
+  Future<void> deleteUser(int id) async {
+    if (kIsWeb) return;
+    await deleteMobileUser(await database, id);
+  }
+
+  Future<AppUser?> login(String username, String password) async {
+    if (kIsWeb) {
+      // Logic login web sederhana karena kIsWeb null database
+      if (username == 'admin' && password == '123') {
+        return AppUser(username: 'admin', password: '123', name: 'Web Admin', role: 'admin');
+      }
+      if (username == 'kasir' && password == '123') {
+        return AppUser(username: 'kasir', password: '123', name: 'Web Kasir', role: 'cashier');
+      }
+      return null;
+    }
+    return await loginMobile(await database, username, password);
+  }
+
   Future<List<Product>> getProductsByCategory(int categoryId) async {
     if (kIsWeb) return [];
     return await getMobileProductsByCategory(await database, categoryId);
@@ -131,6 +165,11 @@ Future<List<CafeTable>> getMobileTables(dynamic db) async => [];
 Future<void> insertMobileTable(dynamic db, CafeTable t) async {}
 Future<void> updateMobileTable(dynamic db, CafeTable t) async {}
 Future<void> deleteMobileTable(dynamic db, int id) async {}
+Future<List<AppUser>> getMobileUsers(dynamic db) async => [];
+Future<void> insertMobileUser(dynamic db, AppUser u) async {}
+Future<void> updateMobileUser(dynamic db, AppUser u) async {}
+Future<void> deleteMobileUser(dynamic db, int id) async {}
+Future<AppUser?> loginMobile(dynamic db, String u, String p) async => null;
 Future<List<Product>> getMobileProductsByCategory(dynamic db, int id) async => [];
 Future<List<Product>> getMobileAllProducts(dynamic db) async => [];
 Future<void> insertMobileProduct(dynamic db, Product p) async {}

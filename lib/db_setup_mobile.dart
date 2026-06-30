@@ -79,7 +79,28 @@ Future<Database> openMobileDatabase(String path, Function onCreate) async {
           isOccupied INTEGER
         )
       ''');
+      await db.execute('''
+        CREATE TABLE users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT,
+          password TEXT,
+          name TEXT,
+          role TEXT
+        )
+      ''');
       // Seed data
+      await db.insert('users', {
+        'username': 'admin',
+        'password': '123',
+        'name': 'Administrator',
+        'role': 'admin'
+      });
+      await db.insert('users', {
+        'username': 'kasir',
+        'password': '123',
+        'name': 'Kasir GM',
+        'role': 'cashier'
+      });
       await db.insert('categories', {'name': 'MANUAL BREW', 'parentId': null});
       await db.insert('categories', {'name': 'ES KOPI CUP/BOTOL', 'parentId': null});
       
@@ -114,6 +135,31 @@ Future<void> updateMobileTable(Database db, CafeTable table) async {
 
 Future<void> deleteMobileTable(Database db, int id) async {
   await db.delete('tables', where: 'id = ?', whereArgs: [id]);
+}
+
+Future<List<AppUser>> getMobileUsers(Database db) async {
+  var res = await db.query('users');
+  return res.map((u) => AppUser.fromMap(u)).toList();
+}
+
+Future<void> insertMobileUser(Database db, AppUser user) async {
+  await db.insert('users', user.toMap());
+}
+
+Future<void> updateMobileUser(Database db, AppUser user) async {
+  await db.update('users', user.toMap(), where: 'id = ?', whereArgs: [user.id]);
+}
+
+Future<void> deleteMobileUser(Database db, int id) async {
+  await db.delete('users', where: 'id = ?', whereArgs: [id]);
+}
+
+Future<AppUser?> loginMobile(Database db, String username, String password) async {
+  var res = await db.query('users', where: 'username = ? AND password = ?', whereArgs: [username, password]);
+  if (res.isNotEmpty) {
+    return AppUser.fromMap(res.first);
+  }
+  return null;
 }
 
 Future<List<Product>> getMobileProductsByCategory(Database db, int categoryId) async {

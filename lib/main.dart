@@ -72,6 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
         await SpreadsheetService().getCategories();
         await SpreadsheetService().getProducts();
         await SpreadsheetService().getTables();
+        await SpreadsheetService().getUsers();
       } catch (e) {
         debugPrint("Error pulling data: $e");
       }
@@ -116,123 +117,134 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _userController = TextEditingController();
+  final _passController = TextEditingController();
+  final _dbHelper = DatabaseHelper();
+  bool _isLoading = false;
+
+  Future<void> _handleLogin() async {
+    if (_userController.text.isEmpty || _passController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Username dan Password harus diisi!')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final user = await _dbHelper.login(_userController.text, _passController.text);
+    setState(() => _isLoading = false);
+
+    if (user != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_page', user.role);
+      await prefs.setString('user_name', user.name);
+      
+      if (mounted) {
+        if (user.role == 'admin') {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminPage()));
+        } else {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CashierPage()));
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Username atau Password Salah!')));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kIsWeb ? Colors.blue[50] : const Color(0xFF121212),
+      backgroundColor: const Color(0xFF000000), // Background hitam untuk semua platform
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: SizedBox(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Image(
+                    image: AssetImage('assets/logo_gm_cafe.png'),
+                    height: 180,
+                  ),
+                  const SizedBox(height: 40),
+                  TextField(
+                    controller: _userController,
+                    autofocus: true,
+                    style: const TextStyle(color: Colors.white), // Teks warna putih agar terbaca
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      prefixIcon: const Icon(Icons.person, color: Color(0xFFD4AF37)),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1), // Sedikit transparan agar elegan
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.white24),
+                      ),
+                    ),
+                    onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _passController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      prefixIcon: const Icon(Icons.lock, color: Color(0xFFD4AF37)),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.white24),
+                      ),
+                    ),
+                    onSubmitted: (_) => _handleLogin(),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
                     width: double.infinity,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Spacer(),
-                        const Image(
-                          image: AssetImage('assets/logo_gm_cafe.png'),
-                          height: 180,
-                        ),
-                        const SizedBox(height: 40),
-                        SizedBox(
-                          width: 250,
-                          height: 55,
-                          child: ElevatedButton.icon(
-                            onPressed: () async {
-                              final prefs = await SharedPreferences.getInstance();
-                              await prefs.setString('last_page', 'cashier');
-                              if (context.mounted) {
-                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CashierPage()));
-                              }
-                            },
-                            icon: const Icon(Icons.point_of_sale),
-                            label: const Text('MASUK KASIR', style: TextStyle(fontWeight: FontWeight.bold)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFD4AF37),
-                              foregroundColor: Colors.black,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: 250,
-                          height: 55,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _showAdminLogin(context),
-                            icon: const Icon(Icons.admin_panel_settings),
-                            label: const Text('ADMIN PANEL', style: TextStyle(fontWeight: FontWeight.bold)),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Color(0xFFD4AF37)),
-                              foregroundColor: const Color(0xFFD4AF37),
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        const Text('support by @sagetdandan', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFFD4AF37))),
-                        const SizedBox(height: 20),
-                      ],
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD4AF37),
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: _isLoading 
+                        ? const CircularProgressIndicator(color: Colors.black)
+                        : const Text('LOGIN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 40),
+                  const Text('support by @sagetdandan', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFFD4AF37))),
+                ],
               ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  void _showAdminLogin(BuildContext context) {
-    final controller = TextEditingController();
-
-    Future<void> login() async {
-      final prefs = await SharedPreferences.getInstance();
-      final savedPass = prefs.getString('admin_pass') ?? '1234';
-      if (controller.text == savedPass) {
-        if (context.mounted) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('last_page', 'admin');
-          Navigator.pop(context);
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => const AdminPage()));
-        }
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text('Password Salah!')));
-        }
-      }
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Login Admin'),
-        content: TextField(
-          controller: controller,
-          obscureText: true,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: 'Password', hintText: 'Default: 1234'),
-          onSubmitted: (_) => login(),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
-          TextButton(
-            onPressed: login,
-            child: const Text('Login'),
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
+
+// Hapus _showAdminLogin lama karena sudah tidak dipakai
 
 class CashierPage extends StatelessWidget {
   const CashierPage({super.key});
@@ -1481,8 +1493,9 @@ class _AdminPageState extends State<AdminPage> {
                         _adminMenuItem(1, Icons.payments, 'Pengeluaran'),
                         _adminMenuItem(2, Icons.receipt_long, 'Laporan'),
                         _adminMenuItem(5, Icons.table_restaurant, 'Meja'),
-        _adminMenuItem(3, Icons.settings, 'Pengaturan'),
-        _adminMenuItem(4, Icons.logout, 'Exit', color: Colors.redAccent),
+                        _adminMenuItem(6, Icons.people, 'Pegawai'),
+                        _adminMenuItem(3, Icons.settings, 'Pengaturan'),
+                        _adminMenuItem(4, Icons.logout, 'Exit', color: Colors.redAccent),
       ],
     ),
   ),
@@ -1502,13 +1515,14 @@ class _AdminPageState extends State<AdminPage> {
           // Content Area
           Expanded(
             child: IndexedStack(
-              index: _selectedIndex == 5 ? 4 : _selectedIndex,
+              index: _selectedIndex == 5 ? 4 : (_selectedIndex == 6 ? 5 : _selectedIndex),
               children: [
                 _buildMenuTabGrid(),
                 _buildExpenseTab(),
                 _buildReportTab(),
                 _buildSettingTab(),
                 _buildTableTab(),
+                _buildUserTab(),
               ],
             ),
           ),
@@ -2313,6 +2327,109 @@ class _AdminPageState extends State<AdminPage> {
         ),
       ],
     );
+  }
+
+  Widget _buildUserTab() {
+    return FutureBuilder<List<AppUser>>(
+      future: _dbHelper.getUsers(),
+      builder: (context, snapshot) {
+        final users = snapshot.data ?? [];
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton.icon(
+                onPressed: () => _showUserDialog(),
+                icon: const Icon(Icons.add),
+                label: const Text('Tambah Pegawai'),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: users.length,
+                itemBuilder: (context, i) {
+                  final u = users[i];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: u.role == 'admin' ? Colors.red[900] : Colors.blue[900],
+                      child: Icon(u.role == 'admin' ? Icons.admin_panel_settings : Icons.person, color: Colors.white),
+                    ),
+                    title: Text(u.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('Username: ${u.username} | Role: ${u.role.toUpperCase()}'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => _showUserDialog(user: u)),
+                        IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () async {
+                          if (u.username == 'admin') {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Admin utama tidak bisa dihapus!')));
+                            return;
+                          }
+                          await _dbHelper.deleteUser(u.id!);
+                          setState(() {});
+                        }),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+  void _showUserDialog({AppUser? user}) {
+    final nameC = TextEditingController(text: user?.name);
+    final userC = TextEditingController(text: user?.username);
+    final passC = TextEditingController(text: user?.password);
+    String selectedRole = user?.role ?? 'cashier';
+
+    showDialog(context: context, builder: (context) => StatefulBuilder(
+      builder: (context, setDialogState) => AlertDialog(
+        title: Text(user == null ? 'Tambah Pegawai' : 'Edit Pegawai'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: nameC, decoration: const InputDecoration(labelText: 'Nama Lengkap')),
+            TextField(controller: userC, decoration: const InputDecoration(labelText: 'Username')),
+            TextField(controller: passC, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
+            const SizedBox(height: 16),
+            DropdownButton<String>(
+              isExpanded: true,
+              value: selectedRole,
+              items: const [
+                DropdownMenuItem(value: 'admin', child: Text('ADMIN (Hak Akses Penuh)')),
+                DropdownMenuItem(value: 'cashier', child: Text('KASIR (Hanya Transaksi)')),
+              ],
+              onChanged: (v) => setDialogState(() => selectedRole = v!),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+          TextButton(onPressed: () async {
+            if (userC.text.isNotEmpty && passC.text.isNotEmpty) {
+              final newUser = AppUser(
+                id: user?.id,
+                name: nameC.text,
+                username: userC.text,
+                password: passC.text,
+                role: selectedRole
+              );
+              if (user == null) {
+                await _dbHelper.insertUser(newUser);
+              } else {
+                await _dbHelper.updateUser(newUser);
+              }
+              setState(() {});
+              if (mounted) Navigator.pop(context);
+            }
+          }, child: const Text('Simpan')),
+        ],
+      ),
+    ));
   }
 
   void _showAddProductDialog() {
