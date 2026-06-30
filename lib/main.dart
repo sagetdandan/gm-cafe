@@ -65,8 +65,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     final prefs = await SharedPreferences.getInstance();
-    final url = prefs.getString('ss_url');
-    if (url != null && url.isNotEmpty) {
+    final url = prefs.getString('ss_url') ?? 'https://script.google.com/macros/s/AKfycbxkiQWWxK3F-nI1uEanG8NtZhwIZZ2DWEb3B9mPH_adJQ7xp_R9KB6lfw3jyC2xahU2w/exec';
+    if (url.isNotEmpty) {
       SpreadsheetService.scriptUrl = url;
       try {
         await SpreadsheetService().getCategories();
@@ -1370,7 +1370,7 @@ class _AdminPageState extends State<AdminPage> {
       _shopFooter = prefs.getString('shop_footer') ?? 'Terima Kasih Atas Kunjungan Anda';
       _addressController.text = _shopAddress;
       _footerController.text = _shopFooter;
-      _ssUrlController.text = prefs.getString('ss_url') ?? 'https://script.google.com/macros/s/AKfycbwjkVAWV43mqQrA6pu6k6O8E8MZqJ6t0e1qu5jWkQx-mAiWksMLmbC5Im1twsyM7D51ng/exec';
+      _ssUrlController.text = prefs.getString('ss_url') ?? 'https://script.google.com/macros/s/AKfycbxXkiQWWxK3F-nI1uEanG8NtZhwIZZ2DWEb3B9mPH_adJQ7xp_R9KB6lfw3jyC2xahU2w/exec';
       if (printerJson != null) {
         final map = jsonDecode(printerJson);
         _selectedDevice = AppBluetoothDevice(map['name'], map['address']);
