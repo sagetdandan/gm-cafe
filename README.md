@@ -3,7 +3,7 @@ Sistem Kasir (Point of Sale) untuk Gadung Melati Cafe yang mendukung sinkronisas
 
 ## 🚀 Live Release (Web)
 Aplikasi ini dapat diakses secara langsung melalui link berikut:
-👉 **[https://sagetdandan.web.app/](https://sagetdandan.web.app/)**
+👉 **[https://gm-cafe.web.app/](https://gm-cafe.web.app/)**
 
 ## ✨ Fitur Utama
 - **Multi-Platform:** Berjalan di Android dan Web.
