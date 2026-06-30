@@ -76,9 +76,17 @@ class _SplashScreenState extends State<SplashScreen> {
         debugPrint("Error pulling data: $e");
       }
     }
+
+    final lastPage = prefs.getString('last_page') ?? 'login';
     
     if (mounted) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+      if (lastPage == 'admin') {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminPage()));
+      } else if (lastPage == 'cashier') {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CashierPage()));
+      } else {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+      }
     }
   }
 
@@ -137,7 +145,13 @@ class LoginPage extends StatelessWidget {
                           width: 250,
                           height: 55,
                           child: ElevatedButton.icon(
-                            onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CashierPage())),
+                            onPressed: () async {
+                              final prefs = await SharedPreferences.getInstance();
+                              await prefs.setString('last_page', 'cashier');
+                              if (context.mounted) {
+                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CashierPage()));
+                              }
+                            },
                             icon: const Icon(Icons.point_of_sale),
                             label: const Text('MASUK KASIR', style: TextStyle(fontWeight: FontWeight.bold)),
                             style: ElevatedButton.styleFrom(
@@ -183,6 +197,8 @@ class LoginPage extends StatelessWidget {
       final savedPass = prefs.getString('admin_pass') ?? '1234';
       if (controller.text == savedPass) {
         if (context.mounted) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('last_page', 'admin');
           Navigator.pop(context);
           Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => const AdminPage()));
@@ -538,7 +554,13 @@ class _CashierScaffoldState extends State<CashierScaffold> {
         title: Text(_showingTables ? 'Dashboard Meja' : 'Pilih Menu - ${_selectedTable?.number}', style: TextStyle(fontWeight: FontWeight.bold, color: kIsWeb ? Colors.black : const Color(0xFFD4AF37))),
         leading: _showingTables ? IconButton(
           icon: Icon(Icons.logout, color: kIsWeb ? Colors.black : Colors.white),
-          onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage())),
+          onPressed: () async {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('last_page', 'login');
+            if (context.mounted) {
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+            }
+          },
         ) : IconButton(
           icon: Icon(Icons.arrow_back, color: kIsWeb ? Colors.black : Colors.white),
           onPressed: () => setState(() => _showingTables = true),
@@ -1385,7 +1407,13 @@ class _AdminPageState extends State<AdminPage> {
         title: const Text('Gadungmelati Cafe - ADMIN', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD4AF37))),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage())),
+          onPressed: () async {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('last_page', 'login');
+            if (context.mounted) {
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+            }
+          },
         ),
         backgroundColor: const Color(0xFF1E1E1E),
         elevation: 2,
@@ -1453,12 +1481,12 @@ class _AdminPageState extends State<AdminPage> {
                         _adminMenuItem(1, Icons.payments, 'Pengeluaran'),
                         _adminMenuItem(2, Icons.receipt_long, 'Laporan'),
                         _adminMenuItem(5, Icons.table_restaurant, 'Meja'),
-                        _adminMenuItem(3, Icons.settings, 'Pengaturan'),
-                        _adminMenuItem(4, Icons.logout, 'Exit', color: Colors.redAccent),
-                      ],
-                    ),
-                  ),
-                ),
+        _adminMenuItem(3, Icons.settings, 'Pengaturan'),
+        _adminMenuItem(4, Icons.logout, 'Exit', color: Colors.redAccent),
+      ],
+    ),
+  ),
+),
                 const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text(
@@ -1499,7 +1527,13 @@ class _AdminPageState extends State<AdminPage> {
           fontWeight: FontWeight.bold,
           color: color ?? Colors.white70,
         )),
-        onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage())),
+        onTap: () async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('last_page', 'login');
+          if (context.mounted) {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+          }
+        },
       );
     }
     
