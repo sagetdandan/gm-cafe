@@ -139,13 +139,27 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _isLoading = true);
     final user = await _dbHelper.login(_userController.text, _passController.text);
-    setState(() => _isLoading = false);
-
+    
     if (user != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('last_page', user.role);
       await prefs.setString('user_name', user.name);
       
+      // Pull fresh data immediately after login
+      final url = prefs.getString('ss_url');
+      if (url != null && url.isNotEmpty) {
+        SpreadsheetService.scriptUrl = url;
+        try {
+          await SpreadsheetService().getCategories();
+          await SpreadsheetService().getProducts();
+          await SpreadsheetService().getTables();
+          await SpreadsheetService().getUsers();
+        } catch (e) {
+          debugPrint("Error pulling data after login: $e");
+        }
+      }
+      
+      setState(() => _isLoading = false);
       if (mounted) {
         if (user.role == 'admin') {
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminPage()));
@@ -154,6 +168,7 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     } else {
+      setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Username atau Password Salah!')));
@@ -514,6 +529,33 @@ class _CashierScaffoldState extends State<CashierScaffold> {
 
   double get _totalPrice => _cart.fold(0, (sum, item) => sum + item.totalPrice);
 
+  void _showLoading() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37))),
+    );
+  }
+
+  void _hideLoading() {
+    Navigator.pop(context);
+  }
+
+  Future<void> _refreshAllData() async {
+    _showLoading();
+    try {
+      if (_isCloudSync) {
+        await _ssService.getCategories();
+        await _ssService.getProducts();
+        await _ssService.getTables();
+        await _ssService.getUsers();
+      }
+      await _loadInitialData();
+    } catch (e) {
+      debugPrint("Error refreshing: $e");
+    }
+    _hideLoading();
+  }
 
   void _showPaymentDialog() {
     showDialog(
@@ -569,6 +611,11 @@ class _CashierScaffoldState extends State<CashierScaffold> {
           onPressed: () => setState(() => _showingTables = true),
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.sync, color: kIsWeb ? Colors.black : Colors.white),
+            onPressed: _refreshAllData,
+            tooltip: 'Sinkronisasi Data',
+          ),
           if (!_showingTables) ...[
             IconButton(
               icon: Icon(Icons.qr_code_scanner, color: kIsWeb ? Colors.black : const Color(0xFFD4AF37)),
@@ -1394,6 +1441,36 @@ class _AdminPageState extends State<AdminPage> {
     setState(() => _expenses = res);
   }
 
+  void _showLoading() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37))),
+    );
+  }
+
+  void _hideLoading() {
+    Navigator.pop(context);
+  }
+
+  Future<void> _refreshAllData() async {
+    _showLoading();
+    try {
+      if (_isCloudSync) {
+        await _ssService.getCategories();
+        await _ssService.getProducts();
+        await _ssService.getTables();
+        await _ssService.getUsers();
+      }
+      await _loadInitialData();
+      await _loadReports();
+      await _loadExpenses();
+    } catch (e) {
+      debugPrint("Error refreshing: $e");
+    }
+    _hideLoading();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1411,6 +1488,13 @@ class _AdminPageState extends State<AdminPage> {
         ),
         backgroundColor: const Color(0xFF1E1E1E),
         elevation: 2,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sync, color: Colors.white),
+            onPressed: _refreshAllData,
+            tooltip: 'Sinkronisasi Data',
+          ),
+        ],
       ),
       body: Row(
         children: [
@@ -1891,6 +1975,7 @@ class _AdminPageState extends State<AdminPage> {
                           actions: [
                             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
                             TextButton(onPressed: () async {
+                              _showLoading();
                               List<Map<String, dynamic>> hppData = hppControllers.map((e) => {
                                 'desc': e['desc']!.text,
                                 'cost': double.tryParse(e['cost']!.text) ?? 0
@@ -1910,16 +1995,16 @@ class _AdminPageState extends State<AdminPage> {
 
                               bool success = false;
                               if (_isCloudSync) {
-                                success = await _ssService.addProduct(product); // addProduct is used for update as well in simple GS
+                                success = await _ssService.addProduct(product);
                               } else {
                                 await _dbHelper.updateProduct(product);
                                 success = true;
                               }
                               
+                              _hideLoading();
                               if (success) {
-                                _loadData();
-                                _selectCategory(_selectedCategory!);
-                                if (mounted) Navigator.pop(context);
+                                Navigator.pop(context);
+                                _refreshAllData();
                               } else {
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal menyimpan ke Cloud!')));
@@ -2045,26 +2130,33 @@ class _AdminPageState extends State<AdminPage> {
             onPressed: () {
               final cDesc = TextEditingController();
               final cAmount = TextEditingController();
+
+              Future<void> handleAdd() async {
+                if (cDesc.text.isNotEmpty && cAmount.text.isNotEmpty) {
+                  _showLoading();
+                  await _dbHelper.insertExpense(Expense(
+                    description: cDesc.text,
+                    amount: double.parse(cAmount.text),
+                    dateTime: DateTime.now(),
+                  ));
+                  _hideLoading();
+                  Navigator.pop(context);
+                  _refreshAllData();
+                }
+              }
+
               showDialog(context: context, builder: (context) => AlertDialog(
                 title: const Text('Tambah Pengeluaran'),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(controller: cDesc, decoration: const InputDecoration(labelText: 'Keterangan (Contoh: Beli Susu)')),
-                    TextField(controller: cAmount, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Nominal')),
+                    TextField(controller: cDesc, decoration: const InputDecoration(labelText: 'Keterangan (Contoh: Beli Susu)'), onSubmitted: (_) => FocusScope.of(context).nextFocus()),
+                    TextField(controller: cAmount, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Nominal'), onSubmitted: (_) => handleAdd()),
                   ],
                 ),
                 actions: [
                   TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
-                  TextButton(onPressed: () async {
-                    await _dbHelper.insertExpense(Expense(
-                      description: cDesc.text,
-                      amount: double.parse(cAmount.text),
-                      dateTime: DateTime.now(),
-                    ));
-                    _loadExpenses();
-                    if (mounted) Navigator.pop(context);
-                  }, child: const Text('Tambah')),
+                  TextButton(onPressed: handleAdd, child: const Text('Tambah')),
                 ],
               ));
             },
@@ -2273,25 +2365,32 @@ class _AdminPageState extends State<AdminPage> {
             onPressed: () {
               final cNum = TextEditingController();
               final cLoc = TextEditingController();
+
+              Future<void> handleAdd() async {
+                if (cNum.text.isNotEmpty) {
+                  _showLoading();
+                  await _dbHelper.insertTable(CafeTable(
+                    number: cNum.text,
+                    location: cLoc.text,
+                  ));
+                  _hideLoading();
+                  Navigator.pop(context);
+                  _refreshAllData();
+                }
+              }
+
               showDialog(context: context, builder: (context) => AlertDialog(
                 title: const Text('Tambah Meja Baru'),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(controller: cNum, decoration: const InputDecoration(labelText: 'Nomor Meja')),
-                    TextField(controller: cLoc, decoration: const InputDecoration(labelText: 'Lokasi (Contoh: Lantai 2)')),
+                    TextField(controller: cNum, decoration: const InputDecoration(labelText: 'Nomor Meja'), onSubmitted: (_) => FocusScope.of(context).nextFocus()),
+                    TextField(controller: cLoc, decoration: const InputDecoration(labelText: 'Lokasi (Contoh: Lantai 2)'), onSubmitted: (_) => handleAdd()),
                   ],
                 ),
                 actions: [
                   TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
-                  TextButton(onPressed: () async {
-                    await _dbHelper.insertTable(CafeTable(
-                      number: cNum.text,
-                      location: cLoc.text,
-                    ));
-                    _loadTables();
-                    if (mounted) Navigator.pop(context);
-                  }, child: const Text('Tambah')),
+                  TextButton(onPressed: handleAdd, child: const Text('Tambah')),
                 ],
               ));
             },
@@ -2314,33 +2413,42 @@ class _AdminPageState extends State<AdminPage> {
                     IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () {
                       final cNum = TextEditingController(text: t.number);
                       final cLoc = TextEditingController(text: t.location);
+
+                      Future<void> handleUpdate() async {
+                        if (cNum.text.isNotEmpty) {
+                          _showLoading();
+                          await _dbHelper.updateTable(CafeTable(
+                            id: t.id,
+                            number: cNum.text,
+                            location: cLoc.text,
+                            isOccupied: t.isOccupied,
+                          ));
+                          _hideLoading();
+                          Navigator.pop(context);
+                          _refreshAllData();
+                        }
+                      }
+
                       showDialog(context: context, builder: (context) => AlertDialog(
                         title: const Text('Edit Meja'),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            TextField(controller: cNum, decoration: const InputDecoration(labelText: 'Nomor Meja')),
-                            TextField(controller: cLoc, decoration: const InputDecoration(labelText: 'Lokasi')),
+                            TextField(controller: cNum, decoration: const InputDecoration(labelText: 'Nomor Meja'), onSubmitted: (_) => FocusScope.of(context).nextFocus()),
+                            TextField(controller: cLoc, decoration: const InputDecoration(labelText: 'Lokasi'), onSubmitted: (_) => handleUpdate()),
                           ],
                         ),
                         actions: [
                           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
-                          TextButton(onPressed: () async {
-                            await _dbHelper.updateTable(CafeTable(
-                              id: t.id,
-                              number: cNum.text,
-                              location: cLoc.text,
-                              isOccupied: t.isOccupied,
-                            ));
-                            _loadTables();
-                            if (mounted) Navigator.pop(context);
-                          }, child: const Text('Simpan')),
+                          TextButton(onPressed: handleUpdate, child: const Text('Simpan')),
                         ],
                       ));
                     }),
                     IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () async {
+                      _showLoading();
                       await _dbHelper.deleteTable(t.id!);
-                      _loadTables();
+                      _hideLoading();
+                      _refreshAllData();
                     }),
                   ],
                 ),
@@ -2409,15 +2517,36 @@ class _AdminPageState extends State<AdminPage> {
     final passC = TextEditingController(text: user?.password);
     String selectedRole = user?.role ?? 'cashier';
 
+    Future<void> handleSave() async {
+      if (userC.text.isNotEmpty && passC.text.isNotEmpty) {
+        _showLoading();
+        final newUser = AppUser(
+          id: user?.id,
+          name: nameC.text,
+          username: userC.text,
+          password: passC.text,
+          role: selectedRole
+        );
+        if (user == null) {
+          await _dbHelper.insertUser(newUser);
+        } else {
+          await _dbHelper.updateUser(newUser);
+        }
+        _hideLoading();
+        Navigator.pop(context);
+        _refreshAllData();
+      }
+    }
+
     showDialog(context: context, builder: (context) => StatefulBuilder(
       builder: (context, setDialogState) => AlertDialog(
         title: Text(user == null ? 'Tambah Pegawai' : 'Edit Pegawai'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameC, decoration: const InputDecoration(labelText: 'Nama Lengkap')),
-            TextField(controller: userC, decoration: const InputDecoration(labelText: 'Username')),
-            TextField(controller: passC, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
+            TextField(controller: nameC, decoration: const InputDecoration(labelText: 'Nama Lengkap'), onSubmitted: (_) => FocusScope.of(context).nextFocus()),
+            TextField(controller: userC, decoration: const InputDecoration(labelText: 'Username'), onSubmitted: (_) => FocusScope.of(context).nextFocus()),
+            TextField(controller: passC, decoration: const InputDecoration(labelText: 'Password'), obscureText: true, onSubmitted: (_) => handleSave()),
             const SizedBox(height: 16),
             DropdownButton<String>(
               isExpanded: true,
@@ -2432,24 +2561,7 @@ class _AdminPageState extends State<AdminPage> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
-          TextButton(onPressed: () async {
-            if (userC.text.isNotEmpty && passC.text.isNotEmpty) {
-              final newUser = AppUser(
-                id: user?.id,
-                name: nameC.text,
-                username: userC.text,
-                password: passC.text,
-                role: selectedRole
-              );
-              if (user == null) {
-                await _dbHelper.insertUser(newUser);
-              } else {
-                await _dbHelper.updateUser(newUser);
-              }
-              setState(() {});
-              if (mounted) Navigator.pop(context);
-            }
-          }, child: const Text('Simpan')),
+          TextButton(onPressed: handleSave, child: const Text('Simpan')),
         ],
       ),
     ));
@@ -2469,6 +2581,45 @@ class _AdminPageState extends State<AdminPage> {
       {'desc': TextEditingController(), 'cost': TextEditingController()}
     ];
     String? selectedImagePath;
+
+    Future<void> handleSave() async {
+      if (cName.text.isNotEmpty && cPrice.text.isNotEmpty) {
+        _showLoading();
+        List<Map<String, dynamic>> hppData = hppControllers.map((e) => {
+          'desc': e['desc']!.text,
+          'cost': double.tryParse(e['cost']!.text) ?? 0
+        }).toList();
+        
+        final product = Product(
+          name: cName.text,
+          price: double.parse(cPrice.text),
+          hpp: hppControllers.fold(0, (sum, item) => sum + (double.tryParse(item['cost']!.text) ?? 0)),
+          priceBotol: double.tryParse(cPriceBotol.text),
+          hppBotol: double.tryParse(cHppBotol.text),
+          hppDetails: jsonEncode(hppData),
+          categoryId: _selectedCategory!.id!,
+          imagePath: selectedImagePath,
+        );
+
+        bool success = false;
+        if (_isCloudSync) {
+          success = await _ssService.addProduct(product);
+        } else {
+          await _dbHelper.insertProduct(product);
+          success = true;
+        }
+
+        _hideLoading();
+        if (success) {
+          Navigator.pop(context);
+          _refreshAllData();
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal menyimpan ke Cloud!')));
+          }
+        }
+      }
+    }
 
     showDialog(
       context: context,
@@ -2519,12 +2670,31 @@ class _AdminPageState extends State<AdminPage> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(child: TextField(controller: cName, decoration: const InputDecoration(labelText: 'Nama Produk'))),
+                      Expanded(child: TextField(
+                        controller: cName, 
+                        decoration: const InputDecoration(labelText: 'Nama Produk'),
+                        onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                      )),
                     ],
                   ),
-                  TextField(controller: cPrice, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Harga Jual (HOT)')),
-                  TextField(controller: cPriceBotol, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Harga Jual (ICE) - Opsional')),
-                  TextField(controller: cHppBotol, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'HPP (ICE) - Opsional')),
+                  TextField(
+                    controller: cPrice, 
+                    keyboardType: TextInputType.number, 
+                    decoration: const InputDecoration(labelText: 'Harga Jual (HOT)'),
+                    onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                  ),
+                  TextField(
+                    controller: cPriceBotol, 
+                    keyboardType: TextInputType.number, 
+                    decoration: const InputDecoration(labelText: 'Harga Jual (ICE) - Opsional'),
+                    onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                  ),
+                  TextField(
+                    controller: cHppBotol, 
+                    keyboardType: TextInputType.number, 
+                    decoration: const InputDecoration(labelText: 'HPP (ICE) - Opsional'),
+                    onSubmitted: (_) => handleSave(),
+                  ),
                   const SizedBox(height: 16),
                   const Text('Detail HPP (Modal HOT)', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
@@ -2537,6 +2707,7 @@ class _AdminPageState extends State<AdminPage> {
                         keyboardType: TextInputType.number, 
                         decoration: const InputDecoration(hintText: 'Harga'),
                         onChanged: (_) => setDialogState(() {}),
+                        onSubmitted: (_) => handleSave(),
                       )),
                       IconButton(
                         icon: const Icon(Icons.remove_circle, color: Colors.red),
@@ -2556,43 +2727,7 @@ class _AdminPageState extends State<AdminPage> {
             actions: [
               TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
               TextButton(
-                onPressed: () async {
-                  if (cName.text.isNotEmpty && cPrice.text.isNotEmpty) {
-                    List<Map<String, dynamic>> hppData = hppControllers.map((e) => {
-                      'desc': e['desc']!.text,
-                      'cost': double.tryParse(e['cost']!.text) ?? 0
-                    }).toList();
-                    
-                    final product = Product(
-                      name: cName.text,
-                      price: double.parse(cPrice.text),
-                      hpp: totalHpp,
-                      priceBotol: double.tryParse(cPriceBotol.text),
-                      hppBotol: double.tryParse(cHppBotol.text),
-                      hppDetails: jsonEncode(hppData),
-                      categoryId: _selectedCategory!.id!,
-                      imagePath: selectedImagePath,
-                    );
-
-                    bool success = false;
-                    if (_isCloudSync) {
-                      success = await _ssService.addProduct(product);
-                    } else {
-                      await _dbHelper.insertProduct(product);
-                      success = true;
-                    }
-
-                    if (success) {
-                      _loadData();
-                      _selectCategory(_selectedCategory!);
-                      if (mounted) Navigator.pop(context);
-                    } else {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal menyimpan ke Cloud!')));
-                      }
-                    }
-                  }
-                },
+                onPressed: handleSave,
                 child: const Text('Simpan'),
               ),
             ],
