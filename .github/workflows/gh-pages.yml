@@ -14,19 +14,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
+
+      - name: Enable Web
+        run: flutter config --enable-web
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build Web
-        run: flutter build web --release --base-href "/gm-cafe/" 
-        # Note: --base-href harus sesuai dengan nama repository GitHub Anda
+        run: flutter build web --release --base-href "/gm-cafe/" --no-tree-shake-icons
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build/web
-          branch: gh-pages # Hasil build akan dikirim ke branch ini
+          branch: gh-pages
