@@ -25,7 +25,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Web
-        run: flutter build web --release --base-href "/gm-cafe/" --no-tree-shake-icons
+        run: flutter build web --release --web-renderer html --base-href "/gm-cafe/" --no-tree-shake-icons
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
