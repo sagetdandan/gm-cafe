@@ -3,7 +3,7 @@ Sistem Kasir (Point of Sale) untuk Gadung Melati Cafe yang mendukung sinkronisas
 
 ## 🚀 Live Release (Web)
 Aplikasi ini dapat diakses secara langsung melalui link berikut:
-👉 **[https://sagetdandan.github.io/gm-cafe/](https://sagetdandan.github.io/gm-cafe/)**
+👉 **[https://sagetdandan.web.app/](https://sagetdandan.web.app/)**
 
 ## ✨ Fitur Utama
 - **Multi-Platform:** Berjalan di Android dan Web.
@@ -16,7 +16,7 @@ Aplikasi ini dapat diakses secara langsung melalui link berikut:
 ## 🛠️ Teknologi
 - **Framework:** Flutter
 - **Database:** Google Apps Script + Spreadsheet (Cloud) & SQFlite (Lokal)
-- **Deployment:** GitHub Actions & GitHub Pages
+- **Deployment:** Firebase Hosting & GitHub Actions
 
 ## 📦 Cara Menjalankan Project
 1. Clone repository ini.
