@@ -1552,132 +1552,173 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   Widget _buildSettingTab() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Column(
       children: [
-        const Text('Printer Bluetooth', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 8),
-        DropdownButton<AppBluetoothDevice>(
-          isExpanded: true,
-          hint: const Text('Pilih Printer'),
-          value: _devices.any((d) => d.address == _selectedDevice?.address) 
-              ? _devices.firstWhere((d) => d.address == _selectedDevice?.address) : null,
-          onChanged: (d) async {
-            if (d != null) {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('selected_printer', jsonEncode({'name': d.name, 'address': d.address}));
-              setState(() => _selectedDevice = d);
-            }
-          },
-          items: _devices.map((d) => DropdownMenuItem(value: d, child: Text(d.name ?? ''))).toList(),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              const Text('Printer Bluetooth', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              DropdownButton<AppBluetoothDevice>(
+                isExpanded: true,
+                hint: const Text('Pilih Printer'),
+                value: _devices.any((d) => d.address == _selectedDevice?.address) 
+                    ? _devices.firstWhere((d) => d.address == _selectedDevice?.address) : null,
+                onChanged: (d) {
+                  if (d != null) {
+                    setState(() => _selectedDevice = d);
+                  }
+                },
+                items: _devices.map((d) => DropdownMenuItem(value: d, child: Text(d.name ?? ''))).toList(),
+              ),
+              ElevatedButton(onPressed: _getBluetoothDevices, child: const Text('Scan Printer')),
+              const SizedBox(height: 16),
+              const Text('Ukuran Kertas', style: TextStyle(fontWeight: FontWeight.bold)),
+              Column(
+                children: [
+                  RadioListTile<String>(
+                    title: const Text('58mm'),
+                    value: '58mm',
+                    groupValue: _paperSize,
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() => _paperSize = val);
+                      }
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('80mm'),
+                    value: '80mm',
+                    groupValue: _paperSize,
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() => _paperSize = val);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const Divider(height: 40),
+              const Text('Informasi Nota', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: _shopLogoPath != null && !kIsWeb ? const Icon(Icons.image, color: Colors.green) : const Icon(Icons.image),
+                title: const Text('Upload Logo Header Struk'),
+                subtitle: _shopLogoPath != null ? Text(_shopLogoPath!, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
+                onTap: () async {
+                  final x = await _picker.pickImage(source: ImageSource.gallery);
+                  if (x != null) {
+                    setState(() => _shopLogoPath = x.path);
+                  }
+                },
+              ),
+              TextField(
+                controller: _addressController,
+                decoration: const InputDecoration(labelText: 'Alamat Toko', hintText: 'Jl. Contoh No. 123'),
+              ),
+              TextField(
+                controller: _footerController,
+                decoration: const InputDecoration(labelText: 'Pesan Kaki (Footer)', hintText: 'Terima Kasih Atas Kunjungan Anda'),
+              ),
+              const Divider(height: 40),
+              const Text('QRIS Toko', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ListTile(
+                leading: _qrisPath != null && !kIsWeb ? const Icon(Icons.qr_code, color: Colors.blue) : const Icon(Icons.qr_code),
+                title: const Text('Upload Gambar QRIS'),
+                subtitle: _qrisPath != null ? Text(_qrisPath!, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
+                onTap: () async {
+                  final x = await _picker.pickImage(source: ImageSource.gallery);
+                  if (x != null) {
+                    setState(() => _qrisPath = x.path);
+                  }
+                },
+              ),
+              TextField(
+                controller: _ssUrlController,
+                decoration: InputDecoration(
+                  labelText: 'Google Spreadsheet Script URL', 
+                  hintText: 'https://script.google.com/macros/s/.../exec',
+                  helperText: 'Digunakan untuk sinkronisasi menu & laporan online',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.auto_fix_high),
+                    tooltip: 'Inisialisasi Kolom Spreadsheet',
+                    onPressed: () async {
+                      if (_ssUrlController.text.isEmpty) return;
+                      bool ok = await SpreadsheetService().initSheet(_ssUrlController.text);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(ok ? 'Berhasil Inisialisasi!' : 'Gagal terhubung ke Script URL')),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ),
+              const Divider(height: 40),
+              ListTile(
+                leading: const Icon(Icons.lock),
+                title: const Text('Ganti Password Admin'),
+                onTap: () {
+                  final c = TextEditingController();
+                  showDialog(context: context, builder: (context) => AlertDialog(
+                    title: const Text('Password Baru'),
+                    content: TextField(controller: c, obscureText: true),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+                      TextButton(onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString('admin_pass', c.text);
+                        if (mounted) Navigator.pop(context);
+                      }, child: const Text('Simpan')),
+                    ],
+                  ));
+                },
+              ),
+              const SizedBox(height: 100),
+            ],
+          ),
         ),
-        ElevatedButton(onPressed: _getBluetoothDevices, child: const Text('Scan Printer')),
-        const SizedBox(height: 16),
-        const Text('Ukuran Kertas', style: TextStyle(fontWeight: FontWeight.bold)),
-        Column(
-          children: [
-            RadioListTile<String>(
-              title: const Text('58mm'),
-              value: '58mm',
-              groupValue: _paperSize,
-              onChanged: (val) async {
-                if (val != null) {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.setString('paper_size', val);
-                  setState(() => _paperSize = val);
-                }
-              },
-            ),
-            RadioListTile<String>(
-              title: const Text('80mm'),
-              value: '80mm',
-              groupValue: _paperSize,
-              onChanged: (val) async {
-                if (val != null) {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.setString('paper_size', val);
-                  setState(() => _paperSize = val);
-                }
-              },
-            ),
-          ],
-        ),
-        const Divider(height: 40),
-        const Text('Informasi Nota', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 8),
-        ListTile(
-          leading: _shopLogoPath != null && !kIsWeb ? const Icon(Icons.image) : const Icon(Icons.image),
-          title: const Text('Upload Logo Header Struk'),
-          onTap: () async {
-            final x = await _picker.pickImage(source: ImageSource.gallery);
-            if (x != null) {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('shop_logo_path', x.path);
-              setState(() => _shopLogoPath = x.path);
-            }
-          },
-        ),
-        TextField(
-          controller: _addressController,
-          decoration: const InputDecoration(labelText: 'Alamat Toko', hintText: 'Jl. Contoh No. 123'),
-          onChanged: (val) async {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('shop_address', val);
-            _shopAddress = val;
-          },
-        ),
-        TextField(
-          controller: _footerController,
-          decoration: const InputDecoration(labelText: 'Pesan Kaki (Footer)', hintText: 'Terima Kasih Atas Kunjungan Anda'),
-          onChanged: (val) async {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('shop_footer', val);
-            _shopFooter = val;
-          },
-        ),
-        const Divider(height: 40),
-        const Text('QRIS Toko', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        ListTile(
-          leading: _qrisPath != null && !kIsWeb ? const Icon(Icons.qr_code) : const Icon(Icons.qr_code),
-          title: const Text('Upload Gambar QRIS'),
-          onTap: () async {
-            final x = await _picker.pickImage(source: ImageSource.gallery);
-            if (x != null) {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('qris_path', x.path);
-              setState(() => _qrisPath = x.path);
-            }
-          },
-        ),
-        TextField(
-          controller: _ssUrlController,
-          decoration: InputDecoration(
-            labelText: 'Google Spreadsheet Script URL', 
-            hintText: 'https://script.google.com/macros/s/.../exec',
-            helperText: 'Digunakan untuk sinkronisasi menu & laporan online',
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.auto_fix_high),
-              tooltip: 'Inisialisasi Kolom Spreadsheet',
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E),
+            boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: const Offset(0, -5))],
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
               onPressed: () async {
-                if (_ssUrlController.text.isEmpty) return;
-                bool ok = await SpreadsheetService().initSheet(_ssUrlController.text);
+                final prefs = await SharedPreferences.getInstance();
+                if (_selectedDevice != null) {
+                  await prefs.setString('selected_printer', jsonEncode({'name': _selectedDevice!.name, 'address': _selectedDevice!.address}));
+                }
+                await prefs.setString('paper_size', _paperSize);
+                await prefs.setString('shop_address', _addressController.text);
+                await prefs.setString('shop_footer', _footerController.text);
+                await prefs.setString('ss_url', _ssUrlController.text);
+                if (_shopLogoPath != null) await prefs.setString('shop_logo_path', _shopLogoPath!);
+                if (_qrisPath != null) await prefs.setString('qris_path', _qrisPath!);
+                
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(ok ? 'Berhasil Inisialisasi!' : 'Gagal terhubung ke Script URL')),
+                    const SnackBar(content: Text('Semua Pengaturan Berhasil Disimpan!'), backgroundColor: Colors.green),
                   );
                 }
               },
+              icon: const Icon(Icons.save),
+              label: const Text('SIMPAN SEMUA PENGATURAN', style: TextStyle(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD4AF37),
+                foregroundColor: Colors.black,
+              ),
             ),
           ),
-          onChanged: (val) async {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('ss_url', val);
-          },
         ),
-        const Divider(height: 40),
-        ListTile(
-          leading: const Icon(Icons.lock),
-          title: const Text('Ganti Password Admin'),
+      ],
+    );
+  }
           onTap: () {
             final c = TextEditingController();
             showDialog(context: context, builder: (context) => AlertDialog(
