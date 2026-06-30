@@ -5,12 +5,11 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -18,10 +17,9 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: true
 
-      - name: Enable Web
-        run: flutter config --enable-web
+      - name: Flutter Doctor
+        run: flutter doctor
 
       - name: Install dependencies
         run: flutter pub get
@@ -34,3 +32,4 @@ jobs:
         with:
           folder: build/web
           branch: gh-pages
+          clean: true
