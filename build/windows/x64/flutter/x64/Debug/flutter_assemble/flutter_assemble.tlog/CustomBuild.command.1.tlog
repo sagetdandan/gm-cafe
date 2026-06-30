@@ -1,0 +1,28 @@
+^D:\SDK ANDROID\GM_CAFE\BUILD\WINDOWS\X64\CMAKEFILES\D27106C017118AF4197CBD986A31E387\FLUTTER_WINDOWS.DLL.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E env FLUTTER_ROOT=D:\flutter "PROJECT_DIR=D:\SDK ANDROID\GM_CAFE" FLUTTER_ROOT=D:\flutter "FLUTTER_EPHEMERAL_DIR=D:\SDK ANDROID\GM_CAFE\windows\flutter\ephemeral" "PROJECT_DIR=D:\SDK ANDROID\GM_CAFE" "FLUTTER_TARGET=D:\SDK ANDROID\GM_CAFE\lib\main.dart" DART_DEFINES=Zmx1dHRlci5pbnNwZWN0b3Iuc3RydWN0dXJlZEVycm9ycz10cnVl,RkxVVFRFUl9WRVJTSU9OPTMuNDQuMQ==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049OTI0MTM0YTQ0Yw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049YzQxNmFjZmViOA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMi4x DART_OBFUSCATION=false TRACK_WIDGET_CREATION=true TREE_SHAKE_ICONS=false "PACKAGE_CONFIG=D:\SDK ANDROID\GM_CAFE\.dart_tool\package_config.json" D:/flutter/packages/flutter_tools/bin/tool_backend.bat windows-x64 Debug
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\SDK ANDROID\GM_CAFE\BUILD\WINDOWS\X64\CMAKEFILES\0F2A5E69E1DFCA93A060EC85C7468573\FLUTTER_ASSEMBLE.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\SDK ANDROID\GM_CAFE\WINDOWS\FLUTTER\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" "-SD:/SDK ANDROID/GM_CAFE/windows" "-BD:/SDK ANDROID/GM_CAFE/build/windows/x64" --check-stamp-file "D:/SDK ANDROID/GM_CAFE/build/windows/x64/flutter/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

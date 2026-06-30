@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\SDK ANDROID\GM_CAFE\build\windows\x64\_deps\sqlite3-subbuild\CMakeFiles\645e2005554ad7108be42b8af4f1b02e\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{53C1757A-65D3-3FC7-B28C-4613F175EB4A}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

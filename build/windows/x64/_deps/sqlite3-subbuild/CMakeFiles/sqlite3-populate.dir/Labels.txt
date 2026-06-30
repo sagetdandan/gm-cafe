@@ -1,0 +1,14 @@
+# Target labels
+ sqlite3-populate
+# Source files and their labels
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/sqlite3-populate
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/645e2005554ad7108be42b8af4f1b02e/sqlite3-populate.rule
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/933603d8bfa761a2e11ffd699389c18f/sqlite3-populate-complete.rule
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/0a40275dad5ef92273e1c5218af2b438/sqlite3-populate-build.rule
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/0a40275dad5ef92273e1c5218af2b438/sqlite3-populate-configure.rule
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/0a40275dad5ef92273e1c5218af2b438/sqlite3-populate-download.rule
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/0a40275dad5ef92273e1c5218af2b438/sqlite3-populate-install.rule
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/0a40275dad5ef92273e1c5218af2b438/sqlite3-populate-mkdir.rule
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/0a40275dad5ef92273e1c5218af2b438/sqlite3-populate-patch.rule
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/0a40275dad5ef92273e1c5218af2b438/sqlite3-populate-test.rule
+D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/0a40275dad5ef92273e1c5218af2b438/sqlite3-populate-update.rule

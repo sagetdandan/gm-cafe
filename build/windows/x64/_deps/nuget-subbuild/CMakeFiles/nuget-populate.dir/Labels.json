@@ -1,0 +1,49 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/nuget-populate"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/7966a795dd29141ee673ef3050597db5/nuget-populate.rule"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/dea2d3d4a7e8c54f53e997198b59757c/nuget-populate-complete.rule"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/99462f449dd2f98376d24aeb9eca6d39/nuget-populate-build.rule"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/99462f449dd2f98376d24aeb9eca6d39/nuget-populate-configure.rule"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/99462f449dd2f98376d24aeb9eca6d39/nuget-populate-copyfile.rule"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/99462f449dd2f98376d24aeb9eca6d39/nuget-populate-download.rule"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/99462f449dd2f98376d24aeb9eca6d39/nuget-populate-install.rule"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/99462f449dd2f98376d24aeb9eca6d39/nuget-populate-mkdir.rule"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/99462f449dd2f98376d24aeb9eca6d39/nuget-populate-patch.rule"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/99462f449dd2f98376d24aeb9eca6d39/nuget-populate-test.rule"
+		},
+		{
+			"file" : "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/99462f449dd2f98376d24aeb9eca6d39/nuget-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"nuget-populate"
+		],
+		"name" : "nuget-populate"
+	}
+}

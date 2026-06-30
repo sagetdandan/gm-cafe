@@ -1,0 +1,10 @@
+^D:\SDK ANDROID\GM_CAFE\BUILD\WINDOWS\X64\CMAKEFILES\DC2030E6B96BE376545FAAAE844B0913\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" "-SD:/SDK ANDROID/GM_CAFE/windows" "-BD:/SDK ANDROID/GM_CAFE/build/windows/x64" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "D:/SDK ANDROID/GM_CAFE/build/windows/x64/gm_cafe.slnx"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

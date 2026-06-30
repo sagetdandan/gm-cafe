@@ -1,0 +1,10 @@
+^D:\SDK ANDROID\GM_CAFE\BUILD\WINDOWS\X64\_DEPS\SQLITE3-SUBBUILD\CMAKEFILES\645E2005554AD7108BE42B8AF4F1B02E\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" "-SD:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild" "-BD:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "D:/SDK ANDROID/GM_CAFE/build/windows/x64/_deps/sqlite3-subbuild/sqlite3-populate.slnx"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -176,6 +177,24 @@ class LoginPage extends StatelessWidget {
 
   void _showAdminLogin(BuildContext context) {
     final controller = TextEditingController();
+
+    Future<void> login() async {
+      final prefs = await SharedPreferences.getInstance();
+      final savedPass = prefs.getString('admin_pass') ?? '1234';
+      if (controller.text == savedPass) {
+        if (context.mounted) {
+          Navigator.pop(context);
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => const AdminPage()));
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('Password Salah!')));
+        }
+      }
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -184,24 +203,12 @@ class LoginPage extends StatelessWidget {
           controller: controller,
           obscureText: true,
           decoration: const InputDecoration(labelText: 'Password', hintText: 'Default: 1234'),
+          onSubmitted: (_) => login(),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
           TextButton(
-            onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              final savedPass = prefs.getString('admin_pass') ?? '1234';
-              if (controller.text == savedPass) {
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminPage()));
-                }
-              } else {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password Salah!')));
-                }
-              }
-            },
+            onPressed: login,
             child: const Text('Login'),
           ),
         ],
@@ -866,8 +873,23 @@ class _PaymentDialogState extends State<PaymentDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(_isFinished ? 'Selesai' : 'Pilih Pembayaran'),
+    return KeyboardListener(
+      focusNode: FocusNode()..requestFocus(),
+      onKeyEvent: (event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter) {
+          if (_isFinished) {
+            // Jika sudah selesai, Enter = Transaksi Baru
+            widget.onPaymentSuccess(_paymentMethod!, _discount);
+            Navigator.pop(context);
+          } else if (_paymentMethod == 'Tunai' && _change >= 0) {
+            setState(() => _isFinished = true);
+          } else if (_paymentMethod == 'QRIS') {
+            setState(() => _isFinished = true);
+          }
+        }
+      },
+      child: AlertDialog(
+        title: Text(_isFinished ? 'Selesai' : 'Pilih Pembayaran'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       content: SingleChildScrollView(
         child: Container(
@@ -922,6 +944,9 @@ class _PaymentDialogState extends State<PaymentDialog> {
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     decoration: const InputDecoration(labelText: 'Uang Diterima', prefixText: 'Rp ', border: OutlineInputBorder()),
                     onChanged: _calculateChange,
+                    onSubmitted: (_) {
+                      if (_change >= 0) setState(() => _isFinished = true);
+                    },
                   ),
                   const SizedBox(height: 16),
                   Row(
