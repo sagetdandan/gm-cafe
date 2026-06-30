@@ -524,8 +524,17 @@ class _CashierScaffoldState extends State<CashierScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return KeyboardListener(
+      focusNode: FocusNode()..requestFocus(),
+      onKeyEvent: (event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter) {
+          if (!_showingTables && _cart.isNotEmpty) {
+            _showPaymentDialog();
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
         title: Text(_showingTables ? 'Dashboard Meja' : 'Pilih Menu - ${_selectedTable?.number}', style: TextStyle(fontWeight: FontWeight.bold, color: kIsWeb ? Colors.black : const Color(0xFFD4AF37))),
         leading: _showingTables ? IconButton(
           icon: Icon(Icons.logout, color: kIsWeb ? Colors.black : Colors.white),
@@ -879,7 +888,18 @@ class _PaymentDialogState extends State<PaymentDialog> {
       onKeyEvent: (event) {
         if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter) {
           if (_isFinished) {
-            // Jika sudah selesai, Enter = Transaksi Baru
+            // Jika sudah selesai, Enter = Cetak (jika ada printer) & Transaksi Baru
+            if (widget.selectedPrinter != null) {
+              PrinterService().printReceipt(
+                device: widget.selectedPrinter!,
+                items: widget.cartItems,
+                total: _finalTotal,
+                discount: _discount,
+                cash: _paymentMethod == 'Tunai' ? _cashReceived : _finalTotal,
+                change: _paymentMethod == 'Tunai' ? (_change > 0 ? _change : 0) : 0,
+                paymentMethod: _paymentMethod!,
+              );
+            }
             widget.onPaymentSuccess(_paymentMethod!, _discount);
             Navigator.pop(context);
           } else if (_paymentMethod == 'Tunai' && _change >= 0) {
@@ -1351,8 +1371,17 @@ class _AdminPageState extends State<AdminPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return KeyboardListener(
+      focusNode: FocusNode()..requestFocus(),
+      onKeyEvent: (event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter) {
+          if (!_showingTables && _cart.isNotEmpty) {
+            _showPaymentDialog();
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
         title: const Text('Gadungmelati Cafe - ADMIN', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD4AF37))),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
