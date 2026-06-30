@@ -202,6 +202,7 @@ class LoginPage extends StatelessWidget {
         content: TextField(
           controller: controller,
           obscureText: true,
+          autofocus: true,
           decoration: const InputDecoration(labelText: 'Password', hintText: 'Default: 1234'),
           onSubmitted: (_) => login(),
         ),
