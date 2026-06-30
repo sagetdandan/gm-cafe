@@ -1,8 +1,7 @@
 # GM CAFE - Gadung Melati Kasir
-
 Sistem Kasir (Point of Sale) untuk Gadung Melati Cafe yang mendukung sinkronisasi Cloud menggunakan Google Spreadsheet.
 
-## 🚀 Live Demo (Web)
+## 🚀 Live Release (Web)
 Aplikasi ini dapat diakses secara langsung melalui link berikut:
 👉 **[https://sagetdandan.github.io/gm-cafe/](https://sagetdandan.github.io/gm-cafe/)**
 
