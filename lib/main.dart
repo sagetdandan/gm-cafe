@@ -552,16 +552,7 @@ class _CashierScaffoldState extends State<CashierScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    return KeyboardListener(
-      focusNode: FocusNode()..requestFocus(),
-      onKeyEvent: (event) {
-        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter) {
-          if (!_showingTables && _cart.isNotEmpty) {
-            _showPaymentDialog();
-          }
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
         title: Text(_showingTables ? 'Dashboard Meja' : 'Pilih Menu - ${_selectedTable?.number}', style: TextStyle(fontWeight: FontWeight.bold, color: kIsWeb ? Colors.black : const Color(0xFFD4AF37))),
         leading: _showingTables ? IconButton(
@@ -1152,7 +1143,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
         if (!_isFinished && _paymentMethod == null)
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
       ],
-    );
+    ));
   }
 }
 
@@ -1405,16 +1396,7 @@ class _AdminPageState extends State<AdminPage> {
 
   @override
   Widget build(BuildContext context) {
-    return KeyboardListener(
-      focusNode: FocusNode()..requestFocus(),
-      onKeyEvent: (event) {
-        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter) {
-          if (!_showingTables && _cart.isNotEmpty) {
-            _showPaymentDialog();
-          }
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
         title: const Text('Gadungmelati Cafe - ADMIN', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD4AF37))),
         leading: IconButton(
