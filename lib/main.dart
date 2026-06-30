@@ -105,11 +105,10 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 20),
             const CircularProgressIndicator(color: Color(0xFFD4AF37)),
-            const SizedBox(height: 10),
-            Text(
-              "Menarik data...",
-              style: TextStyle(color: kIsWeb ? Colors.black : const Color(0xFFD4AF37), fontWeight: FontWeight.bold),
-            )
+            // Text(
+            //   "Menarik data...",
+            //   style: TextStyle(color: kIsWeb ? Colors.black : const Color(0xFFD4AF37), fontWeight: FontWeight.bold),
+            // )
           ],
         ),
       ),
